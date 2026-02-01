@@ -2,181 +2,147 @@
 
 import java.io.Serializable;
 
-public class Item implements Serializable {
-    private String name;
-    private String category;
-    private double price;
+public class Student implements Serializable {
+    int id;
+    String name;
 
-    public Item(String name, String category, double price) {
+    public Student(int id, String name) {
+        this.id = id;
         this.name = name;
-        this.category = category;
-        this.price = price;
     }
 
-    public void update(String name, String category, double price) {
-        this.name = name;
-        this.category = category;
-        this.price = price;
-    }
-
-    @Override
     public String toString() {
-        return name + " | Category: " + category + " | Price: PHP " + price;
+        return "ID: " + id + " | Name: " + name;
     }
 }
 
 import java.io.*;
-import java.util.*;
+import java.util.ArrayList;
 
-public class InventoryApp {
+public class StudentFile {
 
-    static final String FILE_NAME = "items.dat";
-    static Scanner scanner = new Scanner(System.in);
-    static ArrayList<Item> items = new ArrayList<>();
+    static String filename = "students.dat";
 
+    public static ArrayList<Student> readFile() {
+        try {
+            ObjectInputStream ois = new ObjectInputStream(new FileInputStream(filename));
+            return (ArrayList<Student>) ois.readObject();
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
+    }
+
+    public static void writeFile(ArrayList<Student> students) {
+        try {
+            ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filename));
+            oos.writeObject(students);
+        } catch (Exception e) {
+            System.out.println("Error saving file.");
+        }
+    }
+}
+
+import java.util.ArrayList;
+import java.util.Scanner;
+
+public class Main {
     public static void main(String[] args) {
-        loadFromFile();
 
-        while (true) {
-            showMenu();
-            int choice = getIntInput();
+        Scanner sc = new Scanner(System.in);
+        int choice;
+
+        do {
+            System.out.println("\n=== SIMPLE CRUD MENU ===");
+            System.out.println("1. Add");
+            System.out.println("2. View");
+            System.out.println("3. Update");
+            System.out.println("4. Delete");
+            System.out.println("5. Exit");
+            System.out.print("Choice: ");
+
+            while (!sc.hasNextInt()) {
+                System.out.print("Enter number only: ");
+                sc.next();
+            }
+            choice = sc.nextInt();
 
             switch (choice) {
-                case 1 -> addItem();
-                case 2 -> viewItems();
-                case 3 -> updateItem();
-                case 4 -> deleteItem();
-                case 5 -> {
-                    saveToFile();
-                    System.out.println("Program terminated.");
-                    System.exit(0);
-                }
-                default -> System.out.println("Invalid choice.");
+                case 1 -> add(sc);
+                case 2 -> view();
+                case 3 -> update(sc);
+                case 4 -> delete(sc);
+                case 5 -> System.out.println("Goodbye!");
+                default -> System.out.println("Invalid choice!");
+            }
+        } while (choice != 5);
+    }
+
+    static void add(Scanner sc) {
+        ArrayList<Student> students = StudentFile.readFile();
+
+        System.out.print("Enter ID: ");
+        int id = sc.nextInt();
+        sc.nextLine();
+
+        System.out.print("Enter Name: ");
+        String name = sc.nextLine();
+
+        students.add(new Student(id, name));
+        StudentFile.writeFile(students);
+        System.out.println("Added successfully!");
+    }
+
+    static void view() {
+        ArrayList<Student> students = StudentFile.readFile();
+
+        if (students.isEmpty()) {
+            System.out.println("No records found.");
+        } else {
+            for (Student s : students) {
+                System.out.println(s);
             }
         }
     }
 
-    static void showMenu() {
-        System.out.println("\n=== ITEM INVENTORY SYSTEM ===");
-        System.out.println("1. Add Item");
-        System.out.println("2. View Items");
-        System.out.println("3. Update Item");
-        System.out.println("4. Delete Item");
-        System.out.println("5. Exit");
-        System.out.print("Select option: ");
-    }
+    static void update(Scanner sc) {
+        ArrayList<Student> students = StudentFile.readFile();
 
+        System.out.print("Enter ID to update: ");
+        int id = sc.nextInt();
+        sc.nextLine();
 
-    static void addItem() {
-        System.out.print("Item name: ");
-        String name = scanner.nextLine().trim();
+        boolean found = false;
 
-        System.out.print("Category: ");
-        String category = scanner.nextLine().trim();
-
-        System.out.print("Price: ");
-        double price = getDoubleInput();
-
-        items.add(new Item(name, category, price));
-        saveToFile();
-        System.out.println("Item added successfully.");
-    }
-
-
-    static void viewItems() {
-        if (items.isEmpty()) {
-            System.out.println("No items found.");
-            return;
+        for (Student s : students) {
+            if (s.id == id) {
+                System.out.print("New Name: ");
+                s.name = sc.nextLine();
+                found = true;
+                break;
+            }
         }
 
-        System.out.println("\n--- ITEM LIST ---");
-        for (int i = 0; i < items.size(); i++) {
-            System.out.println((i + 1) + ". " + items.get(i));
+        if (found) {
+            StudentFile.writeFile(students);
+            System.out.println("Updated successfully!");
+        } else {
+            System.out.println("ID not found.");
         }
     }
 
+    static void delete(Scanner sc) {
+        ArrayList<Student> students = StudentFile.readFile();
 
-    static void updateItem() {
-        viewItems();
-        if (items.isEmpty()) return;
+        System.out.print("Enter ID to delete: ");
+        int id = sc.nextInt();
 
-        System.out.print("Select item number to update: ");
-        int index = getIntInput() - 1;
+        boolean removed = students.removeIf(s -> s.id == id);
 
-        if (index < 0 || index >= items.size()) {
-            System.out.println("Invalid selection.");
-            return;
+        if (removed) {
+            StudentFile.writeFile(students);
+            System.out.println("Deleted successfully!");
+        } else {
+            System.out.println("ID not found.");
         }
-
-        System.out.print("New name: ");
-        String name = scanner.nextLine().trim();
-
-        System.out.print("New category: ");
-        String category = scanner.nextLine().trim();
-
-        System.out.print("New price: ");
-        double price = getDoubleInput();
-
-        items.get(index).update(name, category, price);
-        saveToFile();
-        System.out.println("Item updated successfully.");
-    }
-
-
-    static void deleteItem() {
-        viewItems();
-        if (items.isEmpty()) return;
-
-        System.out.print("Select item number to delete: ");
-        int index = getIntInput() - 1;
-
-        if (index < 0 || index >= items.size()) {
-            System.out.println("Invalid selection.");
-            return;
-        }
-
-        items.remove(index);
-        saveToFile();
-        System.out.println("Item deleted successfully.");
-    }
-
-    static void saveToFile() {
-        try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(FILE_NAME))) {
-            out.writeObject(items);
-        } catch (IOException e) {
-            System.out.println("Error saving file.");
-        }
-    }
-
-    static void loadFromFile() {
-        File file = new File(FILE_NAME);
-        if (!file.exists()) return;
-
-        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(FILE_NAME))) {
-            items = (ArrayList<Item>) in.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            System.out.println("Error loading file.");
-        }
-    }
-
-  
-    static int getIntInput() {
-        while (!scanner.hasNextInt()) {
-            System.out.print("Enter a valid number: ");
-            scanner.next();
-        }
-        int value = scanner.nextInt();
-        scanner.nextLine();
-        return value;
-    }
-
-    static double getDoubleInput() {
-        while (!scanner.hasNextDouble()) {
-            System.out.print("Enter a valid amount: ");
-            scanner.next();
-        }
-        double value = scanner.nextDouble();
-        scanner.nextLine();
-        return value;
     }
 }
