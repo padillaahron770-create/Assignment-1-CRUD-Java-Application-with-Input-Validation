@@ -65,7 +65,8 @@ public class InventoryApp {
         System.out.println("5. Exit");
         System.out.print("Select option: ");
     }
-    
+
+
     static void addItem() {
         System.out.print("Item name: ");
         String name = scanner.nextLine().trim();
@@ -81,6 +82,7 @@ public class InventoryApp {
         System.out.println("Item added successfully.");
     }
 
+
     static void viewItems() {
         if (items.isEmpty()) {
             System.out.println("No items found.");
@@ -92,6 +94,7 @@ public class InventoryApp {
             System.out.println((i + 1) + ". " + items.get(i));
         }
     }
+
 
     static void updateItem() {
         viewItems();
@@ -118,6 +121,7 @@ public class InventoryApp {
         saveToFile();
         System.out.println("Item updated successfully.");
     }
+
 
     static void deleteItem() {
         viewItems();
@@ -155,6 +159,7 @@ public class InventoryApp {
         }
     }
 
+  
     static int getIntInput() {
         while (!scanner.hasNextInt()) {
             System.out.print("Enter a valid number: ");
@@ -175,4 +180,3 @@ public class InventoryApp {
         return value;
     }
 }
-
